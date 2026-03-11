@@ -12,13 +12,13 @@
 
 **Technical**
 - Modular architecture for easy expansion
-- Client-side GUI with server-side validation
-- Secure solution checking to prevent exploits
+- Each player has their own world/progress by using client-side GUI with server-side validation
+- Exploit-safe solution checker when a box was solved in a locked room
 
 ---
 
 ## Showcase
-[![Watch showcase](https://img.youtube.com/vi/CxTu0pmYB8M/0.jpg)](https://www.youtube.com/watch?v=CxTu0pmYB8M )
+[![Watch showcase](https://img.youtube.com/vi/v-lSLkupqdE/0.jpg)](https://www.youtube.com/watch?v=v-lSLkupqdE)
 
 ---
 
@@ -32,16 +32,16 @@ Workspace
      └─ Rooms
          └─ (Room Name)
              ├─ Boxes
-             │   └─ (Puzzle box parts)                         │ Each part must be tagged "PuzzleBox" and have the attribute "Hint" to function properly.
-             └─ (Other things, like Geometry or Props)
+             │   └─ (Puzzle box parts)                   │ Each part must be tagged "PuzzleBox" and have the attribute "Hint" to function properly.
+             └─ (Geometry, Props, etc-)
 
 
 ReplicatedStorage
  ├─ Modules
- │   ├─ Animations                                             │ Handles the animation played when a box is solved.
- │   ├─ BoxInitialization                                      │ Initializes all GUI for boxes and connects input listeners.
- │   ├─ ColorDisplay                                           │ Displays the color of the part the player is looking at.
- │   └─ PuzzleBoxHandler                                       │ Displays door progress locally and sets handles everything needed whenever a box is solved.
+ │   ├─ Animations                                       │ Handles the animation played when a box is solved.
+ │   ├─ BoxInitialization                                │ Initializes all GUI for boxes and connects input listeners.
+ │   ├─ ColorDisplay                                     │ Displays the color of the part the player is looking at as text.
+ │   └─ PuzzleBoxHandler                                 │ Displays door progress locally and handles everything needed whenever a box is solved.
  ├─ Events
  │   ├─ Bindables
  │   │   ├─ UpdateCompletedRoom
@@ -60,8 +60,8 @@ ReplicatedStorage
  │   └─ Remotes
  │       ├─ CheckSolution
  │       └─ GetSolutionLength
- ├─ EventRegistry                                              │ Centralized access for events / functions, allowing cleaner code and easier access.
- ├─ BoxTemplateGui                                             │ Template to be cloned on the corresponding part
+ ├─ EventRegistry                                        │ Centralized access for events/functions, allowing cleaner code and easier access.
+ ├─ BoxTemplateGui                                       │ The GUI template to be cloned onto the corresponding box.
  ├─ DoorTemplateGui
  └─ HintTemplateGui
 
@@ -74,18 +74,18 @@ ReplicatedStorage
 
 ServerScriptService
  ├─ Modules
- │   ├─ PlayerData                                             │ Handles anything data related, like saving/loading, updating completed rooms and solved box data.
- │   ├─ Rooms                                                  │ Server-sidedly handles door progress.
- │   └─ Solutions                                              │ Used for filtering messages and checking if solutions are correct.
- └─ Main.Server.Lua                                            │ Main server script that initializes anything server-related.
+ │   ├─ PlayerData                                       │ Handles anything data related, like saving/loading players' data or updating completed rooms and solved box data.
+ │   ├─ Rooms                                            │ Server-sidedly handles door progress.
+ │   └─ Solutions                                        │ Used for filtering messages and checking if solutions are correct.
+ └─ Main.Server.Lua                                      │ Main server script that initializes anything server-related.
 
 
  ServerStorage
- └─ SolutionList                                               │ Contains all room data and box solutions.
+ └─ SolutionList                                         │ Contains solutions for each box and all room data.
 
 
 StarterPlayerScripts
- └─ Main.Client.Lua                                            │ Main client script that initializes anything client-related.
+ └─ Main.Client.Lua                                      │ Main client script that initializes anything client-related.
 ```
 
 #### Reference
@@ -94,20 +94,20 @@ StarterPlayerScripts
 #### System flow
 
 - `Main.Server.lua` initializes all modules, events, and player data when the game starts.
-- When a player joins, their saved progression is loaded and the server sends the solved box list using `SendSolvedList` so the client can reconstruct the correct puzzle states.
+- When a player joins, their saved progress is loaded and the server sends the solved box list using `SendSolvedList` so the client can reconstruct the correct puzzle states.
 
 - `Main.Client.lua` initializes all puzzle boxes using the `BoxInitialization` module.
-- During initialization, every part tagged `PuzzleBox` is validated and gets its corresponding GUI elements cloned onto it. The solution of the box is masked server-sidedly (for example "good" to "____") and set as a placeholder text, while also applying its hint text. The module also connects the input listener to listen for text changes.
+- During initialization, every part tagged `PuzzleBox` or `HintBox` is validated and gets its corresponding GUI cloned onto it. Its hint text is applied, and if the box isn't a `HintBox`, the solution of the box is masked server-sidedly (for example "good" to "____") and set as a placeholder text. The module also connects the input listener to listen for text changes.
 
 - When a player types something into a puzzle box, the client makes sure that the input length never exceeds the expected solution length by truncating extra characters.
 
 - Once the input reaches the correct length, the client asks the server for validation using the `CheckSolution` RemoteFunction.
 
-- The server verifies that the puzzle box is currently solveable using `IsBoxSolvable`, preventing players from solving puzzles inside of locked rooms. If valid, the correct solution is retrieved from the `SolutionList` and compared with the player's input.
+- The server verifies that the puzzle box is currently solvable using `IsBoxSolvable`, preventing players from solving puzzles inside of locked rooms. If solvable, the correct solution is retrieved from the `SolutionList` and compared with the player's input.
 
 - If the solution is correct, the server updates the solved state for that box and fires the `BoxCompleted` event.
 
-- The client then triggers the local `OnBoxSolved` function, which releases textbox focus, updates the visual state, and plays the completion animation.
+- If `BoxCompleted` has been received, the client then triggers the `OnBoxSolved` function, which releases textbox focus, updates the visual state, and plays the completion animation.
 
 - After a box is solved, the server checks how many puzzle boxes remain unsolved in the current room.
 
@@ -132,17 +132,15 @@ I decided to recreate a similar system as a programming challenge and to experim
 
 ## What I Learned
 
-I learned how to design initialization systems for large number of interactable objects, like the boxes and doors.
+I learned how to design initialization systems for large number of interactable objects, like for the boxes and doors.
 
-I also learned how to manage complex communication between the client and the server, since this project uses a lot of events and functions. This also helped me learn how to structure systems using modules and event registries.
+I also learned how to manage complex communication between the client and the server, since this project uses a lot of events and functions. This also helped me learn how to structure systems using event registries.
 
 Lastly, I learned how I can handle player progression data safely and efficiently.
 
 ## What I'd Improve
 
-If I continued developing this project, I would add stronger audio/visual feedback by adding sound and improve animations. I would also expand the map and puzzles, and also introduce additional mechanics to make my project stand out and...
-
-Door animations, sound feedback, expand on the map, add new mechanics and so forth, but that would turn it from a small system to a whole game D: (no motivation)
+If I continued developing this project, I would add stronger audio/visual feedback by adding sound and improving animations. I would also expand the map and puzzles, and also introduce additional mechanics to make my project stand out. However, the current scope focuses on demonstrating the core system architecture rather than building a full game
 
 ---
 
