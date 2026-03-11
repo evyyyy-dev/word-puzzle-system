@@ -18,7 +18,7 @@
 ---
 
 ## Showcase
-[![Watch showcase](https://img.youtube.com/vi/9HX1YfS0khI/0.jpg)](https://www.youtube.com/watch?v=9HX1YfS0khI)
+[![Watch showcase](https://img.youtube.com/vi/CxTu0pmYB8M/0.jpg)](https://www.youtube.com/watch?v=CxTu0pmYB8M )
 
 ---
 
